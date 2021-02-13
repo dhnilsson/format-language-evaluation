@@ -15,3 +15,5 @@ The demonstration files can be parsed by:
      (i.e.  `dhall-to-json --file system-obmcrouter.dhall` )
      Output by default printed,  pair your shell-specific 
      pipe operation to direct to a file.
+
+![](./dhall-to-json-flow.png)
