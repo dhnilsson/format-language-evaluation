@@ -1,0 +1,72 @@
+# device-max9000
+# Preambles
+# --- !<tag:pmbus.org,2021:PMBusStandardFormat>
+
+device: 
+  name: MAX9000
+  vendor: Maxim
+  revision: A
+  description: Typical operations for Maxim MAX9000
+  operations:
+  -
+      name: Configure
+      operation_type: composition
+      composition_operation_steps:
+      -
+        run:
+          -
+            device_ref: self
+            operation: Check If Disabled
+        run:
+          -
+            device_ref: self
+            operation: Write Configuration
+  - 
+      name: Check If Disabled
+      operation_type: smbus_operation
+      operation_error_handling: break_on_error
+      smbus_address: 0x00
+      smbus_operation_structure:
+        [command_code, transaction_type, write_data, expect_data, and_mask, use_pec]
+      smbus_operation_steps:
+      - [0x01, read_byte , ~   , 0x00, 0x80 , false] # OPERATION, evaluate bit 7
+  -
+      name: Write Configuration
+      description: Configure device for 3.3V operation.
+      operation_type: smbus_operation
+      operation_error_handling: break_on_error
+      smbus_address: 0x00
+      smbus_operation_structure:
+        [command_code, transaction_type, write_data, use_pec]
+      smbus_operation_steps: 
+      - [0x21, write_word , 0x699A, false] # VOUT_COMMAND: 3.3V 
+      - [0x15, send_byte  , ~     , false] # STORE_USER_ALL
+      - [~   , delay_in_ms, 10    , false] # A hack to deal with IC's requiring txn delays / fit within mapping
+  - 
+      name: Verify #NOTE: I'm making a composition here for sake of testing/asking how returns get propagated
+      operation_type: composition
+      -
+        run:
+          -
+            device_ref: self
+            operation: Verify Configuration
+  -
+      name: Verify Configuration
+      description: Verify 3.3V setup.
+      operation_type: smbus_operation_expect_checksum
+      operation_error_handling: break_on_error
+      smbus_address: 0x00
+      smbus_operation_structure:
+        [command_code, transaction_type, write_data, expect_data, and_mask, use_pec]
+      smbus_operation_steps:
+      - [0x21, read_word , ~   , 0x699A, ~   , false] # VOUT_COMMAND: 3.3V
+  -
+      name: Presence
+      description: Detect whether device is present.
+      operation_type: smbus_operation_expect_boolean
+      smbus_address: 0x00
+      smbus_operation_structure:
+        [command_code, transaction_type, write_data, expect_data, and_mask, use_pec]
+      smbus_operation_steps:
+        - [0x50, read_block , 0x8D , ~, MAXIM, ~, false ]
+

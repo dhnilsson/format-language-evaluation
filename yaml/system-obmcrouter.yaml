@@ -1,0 +1,30 @@
+# system-obmcrouter
+# Preambles
+# --- !<tag:pmbus.org,2021:PMBusStandardFormat>
+
+devices: []
+
+system: 
+  name: OBMC Router System 
+  revision: A
+  description: OpenBMC Router
+  operations:
+    -
+    name: Configure & Verify System
+    operation_type: composition
+    composition_operation_steps:
+    -
+      run:
+        -
+          device_ref: MAX9000
+          operation: Configure
+          overrides:
+            channel: /dev/i2c0
+            smbus_address: 0x03
+      run:
+        - 
+          device_ref: MAX9000
+          operation: Verify
+          overrides:
+            channel: /dev/i2c0
+            smbus_address: 0x03
